@@ -830,6 +830,81 @@ def test_Reshape(tmpdir):
     model = C.reshape(i1, (2,3))
     verify_one_input(model, data, tmpdir, 'Reshape_1')
 
+#RNN
+def CreatRNN(cell_dim, 
+             activation, 
+             initial_state,
+             direction, 
+             num_layers, 
+             init=C.default_override_or(C.glorot_uniform()), 
+             init_bias=C.default_override_or(0)):
+    if direction == 'bidirectional':  
+        return C.layers.Sequential([  
+            C.layers.For(range(num_layers), lambda i: [  
+                (C.layers.Recurrence(C.layers.RNNStep(cell_dim, 
+                                                      activation = activation,    
+                                                      init = init,   
+                                                      init_bias = init_bias),  
+                            initial_state = initial_state,  
+                            return_full_state = False, go_backwards=False),   
+                 C.layers.Recurrence(C.layers.RNNStep(cell_dim, activation = activation,   
+                                init = init,  
+                                init_bias = init_bias), 
+                            initial_state = initial_state,  
+                            return_full_state = False, go_backwards=True)),   
+                C.splice])])
+    else:
+        go_backward = False if direction == 'forward' else True
+        return C.layers.Sequential([ 
+            C.layers.For(range(num_layers), lambda i: [ 
+                C.layers.Recurrence(C.layers.RNNStep(cell_dim, 
+                                                     activation = activation,   
+                                init = init,  
+                                init_bias = init_bias),  
+                            initial_state = initial_state,  
+                            return_full_state = False, go_backwards=go_backward)])])
+
+def MakeRNNNameFromConfig(direction, num_layers, initial_state, activtion):
+    model_name = 'GRU.' + direction + '.'
+
+    if num_layers == 1:
+        model_name += 'one_layer.'
+    else:
+        assert (num_layers == 2), "needs 1 or 2 layers!"
+        model_name += 'two_layer.'
+
+    if (initial_state != 0):
+        model_name += 'initial.'
+        
+    model_name += activtion.__name__
+    return model_name 
+
+direction_options = ['forward', 'reverse', 'bidirectional']
+num_layers_options = [1, 2]
+initial_state_options = [0, 0.1]
+activation_options = [C.tanh, C.relu, C.sigmoid]
+
+input_dim = 2
+hidden_dim = 3
+batch_size = 1
+sequence_len = 5
+
+def test_GRU(tmpdir):
+    for config in list(product(direction_options, num_layers_options, initial_state_options, activation_options)):
+        model_filename = MakeRNNNameFromConfig(*config)
+        print(model_filename)
+        direction, num_layers, initial_state, activation = config
+    
+        x = C.input_variable(input_dim, dynamic_axes=[C.Axis.default_batch_axis(), C.Axis('sequenceAxis')]) 
+        RNNModel = CreatRNN(
+            hidden_dim, 
+            activation,  
+            initial_state, 
+            direction, 
+            num_layers)(x)
+        data = np.random.uniform(low=0.0, high=1.0, size=(batch_size, sequence_len, input_dim)).astype('f')
+        verify_one_input(RNNModel, data, tmpdir, model_filename)
+
 #Selu
 def test_Selu(tmpdir):
     model = C.selu([[-1, -0.5, 0, 1, 2]])
