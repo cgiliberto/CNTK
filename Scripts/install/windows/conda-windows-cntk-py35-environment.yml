@@ -27,7 +27,7 @@ dependencies:
 - dlib=19.0=np111py35_200
 - pip:
   - gym==0.5.2
-  - keras==2.0.6
+  - keras==2.1.5
   - pydot-ng==1.0.0
   - pygame==1.9.3
   - pytest==3.0.3
