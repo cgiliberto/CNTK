@@ -122,7 +122,7 @@ std::tuple<std::function<FunctionPtr(const Variable&)>, std::function<FunctionPt
 GetActivations(const std::vector<std::string> &activations, const std::vector<float> &activation_alpha, const std::vector<float> &activation_beta, int direction)
 {
     if (activations.size() < (direction + 1) * LSTMActivationCount)
-        CNTK::LogicError("LSTM activations shall be %d or %d of strings", LSTMActivationCount, LSTMActivationCount * 2);
+        CNTK::LogicError("LSTM activations shall be a list of strings of size %d or %d ", LSTMActivationCount, LSTMActivationCount * 2);
 
     // 
     int iofActivationIndex = direction * LSTMActivationCount + LSTMActivationFIndex;
@@ -162,7 +162,7 @@ std::tuple<std::function<FunctionPtr(const Variable&)>, std::function<FunctionPt
 GetGRUActivations(const std::vector<std::string> &activations, const std::vector<float> &activation_alpha, const std::vector<float> &activation_beta, int direction)
 {
     if (activations.size() < (direction + 1) * GRUActivationCount)
-        CNTK::LogicError("GRU activations shall be %d or %d of strings", GRUActivationCount, GRUActivationCount * 2);
+        CNTK::LogicError("GRU activations shall be a list of strings of size %d or %d", GRUActivationCount, GRUActivationCount * 2);
 
     // 
     int fActivationIndex = direction * GRUActivationCount + GRUActivationFIndex;
@@ -194,7 +194,7 @@ std::function<FunctionPtr(const Variable&)>
 GetRNNActivations(const std::vector<std::string> &activations, const std::vector<float> &activation_alpha, const std::vector<float> &activation_beta, int direction)
 {
     if (activations.size() < (direction + 1))
-        CNTK::LogicError("RNN activations shall be 1 or 2 of strings");
+        CNTK::LogicError("RNN activations shall be a list of strings of size 1 or 2");
 
     // 
     int activationIndex = direction;
@@ -374,8 +374,10 @@ FunctionPtr GRUComponent(Variable input,
 
     auto actualDh = recurrenceHookH(gruCell);
 
-    gruCell->ReplacePlaceholders({ { inputPlaceholder , input },{ dh, actualDh } });
-    return gruCell;
+    gruCell->ReplacePlaceholders({ { dh, actualDh } });
+
+    auto gruBlock = AsBlock(std::move(gruCell), { { inputPlaceholder , input } }, L"GRU", L"");
+    return gruBlock;
 }
 
 FunctionPtr RNNComponent(Variable input,

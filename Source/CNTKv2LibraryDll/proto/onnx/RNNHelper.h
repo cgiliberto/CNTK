@@ -155,6 +155,11 @@ enum
     CNTKRNNInputCount = 5
 };
 
+enum
+{
+    RNNBiasMultiplier = 2
+};
+
 const string RNNDirectionBidirection = "bidirectional";
 const string RNNDirectionReverse = "reverse";
 const string RNNDirectionForward = "forward";

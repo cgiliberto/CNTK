@@ -107,7 +107,7 @@ namespace CNTK
         static ONNXIR::Node *InsertReshapeNodeToCNTKFunction(const FunctionPtr &src, ONNXIR::Node* node, const std::vector<int> &shape, ONNXIR::Graph* graph);
 
         //
-        //  Create a LSTM node.
+        //  methods to create a RNN/LSTM/GRU node.
         //
         static ONNXIR::Node* CreateLSTMNode(const FunctionPtr& src,
             ONNXIR::Graph* graph,
@@ -447,7 +447,7 @@ void AppendCNTKBiasWeightToONNXTensor(DType *data, const NDShape &shape, onnx::T
             row -= 2 * cell_size;
         }
 
-        // soruce is collmn major
+        // source is collmn major
         int src_index = row;
         if (typeid(DType) == typeid(float))
             *(dst.mutable_float_data()->Add()) = (float)data[src_index];
@@ -515,7 +515,7 @@ void AppendCNTKWeightToONNXTensor(DType *data, const NDShape &shape, onnx::Tenso
             row -= 2 * cell_size;
         }
 
-        // soruce is collum major
+        // source is column major
         int src_index = LSTMWeightDimensionHiddenMultiplier * cell_size * col + row;
         if (typeid(DType) == typeid(float))
             *(dst.mutable_float_data()->Add()) = (float)(data[src_index] * stabilizer);
@@ -701,7 +701,7 @@ void CNTKToONNXHelper::CopyGRUWeightTensors(const std::vector<NDArrayViewPtr> &s
             int row = targetIndex / input_size,
                 col = targetIndex % input_size;
 
-            // soruce is collum major
+            // source is column major
             int srcIndex = 3 * cell_size * col + row;
             AddDataElementArrayViewToTensorProto(srcTemp, srcIndex, dst);
         }
@@ -795,7 +795,7 @@ void CNTKToONNXHelper::CopyRNNWeightTensors(const std::vector<NDArrayViewPtr> &s
             int row = targetIndex / input_size,
                 col = targetIndex % input_size;
 
-            // soruce is collum major
+            // source is column major
             int srcIndex = cell_size * col + row;
             AddDataElementArrayViewToTensorProto(srcTemp, srcIndex, dst);
         }
